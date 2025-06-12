@@ -12,20 +12,28 @@ UPLOAD_FOLDER = 'static/uploads'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-# Path model
+# Konfigurasi model
 MODEL_URL = "https://github.com/notataxpayer/model_color_detectorv2/releases/download/v1/best_model_newest.h5"
-MODEL_PATH = "best_model.h5"
+MODEL_PATH = "best_model_newest.h5"
+MIN_FILE_SIZE = 100000  # byte, sekitar 100 KB, asumsi model pasti lebih besar dari ini
 
-# Unduh model jika belum ada
+# Fungsi download model dari GitHub Releases
+def download_model(url, output_path):
+    print("🔽 Downloading model...")
+    with requests.get(url, stream=True, allow_redirects=True) as r:
+        r.raise_for_status()
+        with open(output_path, 'wb') as f:
+            for chunk in r.iter_content(chunk_size=8192):
+                if chunk:
+                    f.write(chunk)
+    print("✅ Download complete.")
+
+# Unduh model jika belum tersedia
 if not os.path.exists(MODEL_PATH):
-    print("🔽 Downloading model from GitHub Releases...")
-    response = requests.get(MODEL_URL)
-    with open(MODEL_PATH, 'wb') as f:
-        f.write(response.content)
-    print("✅ Model downloaded.")
+    download_model(MODEL_URL, MODEL_PATH)
 
-# Validasi ukuran file
-if os.path.getsize(MODEL_PATH) < 100000:
+# Validasi ukuran file model
+if os.path.getsize(MODEL_PATH) < MIN_FILE_SIZE:
     raise Exception("❌ Model file too small or corrupt. Possibly HTML page.")
 
 # Load model
@@ -62,7 +70,7 @@ def predict():
         'confidence': round(confidence, 4)
     })
 
-# Jalankan aplikasi
+# Jalankan server
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port)
