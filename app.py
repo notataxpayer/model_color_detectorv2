@@ -3,6 +3,7 @@ from werkzeug.utils import secure_filename
 import os
 import numpy as np
 import zipfile
+import gdown
 from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing.image import load_img, img_to_array
 
@@ -12,22 +13,24 @@ UPLOAD_FOLDER = 'static/uploads'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-# Path model
+# Konfigurasi model
+MODEL_URL = "https://drive.google.com/uc?id=1J0jRFjJNRAlMKgxw642irZ6FNxPEslqT"
 MODEL_ZIP = "best_model.zip"
 MODEL_PATH = "best_model.h5"
 
-# Extract model jika belum tersedia
+# Unduh & ekstrak model jika belum tersedia
 if not os.path.exists(MODEL_PATH):
-    print("📦 Extracting model from ZIP...")
+    print("🔽 Downloading model ZIP from Google Drive...")
+    gdown.download(MODEL_URL, MODEL_ZIP, quiet=False, use_cookies=True)
     if not os.path.exists(MODEL_ZIP):
-        raise FileNotFoundError("Zip file for model not found.")
+        raise Exception("❌ Failed to download model ZIP.")
+    print("📦 Extracting model...")
     with zipfile.ZipFile(MODEL_ZIP, 'r') as zip_ref:
         zip_ref.extractall()
-    print("✅ Model extracted.")
 
-# Validasi ukuran file model
-if os.path.getsize(MODEL_PATH) < 100000:
-    raise Exception("Extracted model file too small or corrupt.")
+# Validasi ukuran model
+if not os.path.exists(MODEL_PATH) or os.path.getsize(MODEL_PATH) < 100000:
+    raise Exception("❌ Extracted model file too small or corrupt.")
 
 # Load model
 model = load_model(MODEL_PATH)
