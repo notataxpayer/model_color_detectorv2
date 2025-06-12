@@ -5,42 +5,29 @@ import numpy as np
 from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing.image import load_img, img_to_array
 
-# === Konfigurasi Flask ===
+# Inisialisasi Flask
 app = Flask(__name__)
 UPLOAD_FOLDER = 'static/uploads'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-# === Info Model ===
-MODEL_URL = "https://github.com/notataxpayer/model_color_detectorv2/releases/latest/download/best_model_newest.h5"
+# Path ke model
 MODEL_PATH = "best_model_newest.h5"
-TARGET_SIZE = (150, 150)
-CLASS_LABELS = ['autumn', 'spring', 'summer', 'winter']
 
-# === Unduh model jika belum ada ===
+# Validasi keberadaan model
 if not os.path.exists(MODEL_PATH):
-    print("📦 Downloading model with wget...")
-    os.system(f"wget --content-disposition {MODEL_URL} -O {MODEL_PATH}")
+    raise FileNotFoundError(f"❌ File model tidak ditemukan di: {MODEL_PATH}")
 
-# === Validasi model ===
-if not os.path.exists(MODEL_PATH):
-    raise Exception("❌ Failed to download model file.")
+# Validasi ukuran file
+if os.path.getsize(MODEL_PATH) < 100000:
+    raise Exception("❌ Model file too small or corrupt.")
 
-# Cek ukuran file
-file_size = os.path.getsize(MODEL_PATH)
-print(f"📁 Model file size: {file_size} bytes")
-
-# Cek konten awal file (pastikan bukan HTML)
-with open(MODEL_PATH, "rb") as f:
-    preview = f.read(256)
-    if b"<html" in preview or file_size < 50000:
-        raise Exception("❌ Model file too small or corrupt. Possibly HTML page.")
-
-# === Load model ===
-print("✅ Loading model...")
+# Load model
 model = load_model(MODEL_PATH)
+target_size = (150, 150)
+class_labels = ['autumn', 'spring', 'summer', 'winter']
 
-# === Endpoint prediksi ===
+# Endpoint prediksi
 @app.route('/predict', methods=['POST'])
 def predict():
     if 'image' not in request.files:
@@ -55,13 +42,13 @@ def predict():
     file.save(filepath)
 
     # Preprocess gambar
-    img = load_img(filepath, target_size=TARGET_SIZE)
+    img = load_img(filepath, target_size=target_size)
     img_array = img_to_array(img) / 255.0
     img_array = np.expand_dims(img_array, axis=0)
 
     # Prediksi
     predictions = model.predict(img_array)
-    predicted_label = CLASS_LABELS[np.argmax(predictions)]
+    predicted_label = class_labels[np.argmax(predictions)]
     confidence = float(np.max(predictions))
 
     return jsonify({
@@ -69,7 +56,7 @@ def predict():
         'confidence': round(confidence, 4)
     })
 
-# === Run app ===
+# Jalankan Flask
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port)
