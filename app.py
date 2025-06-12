@@ -12,26 +12,31 @@ UPLOAD_FOLDER = 'static/uploads'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-# URL/ID Google Drive model
-MODEL_ID = "1J0jRFjJNRAlMKgxw642irZ6FNxPEslqT"
+# ============================
+# Konfigurasi model dari GDrive
+# ============================
 MODEL_PATH = "best_model.h5"
+MODEL_URL = "https://drive.google.com/uc?export=download&id=1J0jRFjJNRAlMKgxw642irZ6FNxPEslqT"
 
-# Unduh model jika belum ada
+# Download model jika belum ada
 if not os.path.exists(MODEL_PATH):
-    print("🔽 Downloading model from Google Drive using gdown...")
-    gdown.download(id=MODEL_ID, output=MODEL_PATH, quiet=False, use_cookies=False)
+    print("🔽 Downloading model from Google Drive...")
+    gdown.download(MODEL_URL, MODEL_PATH, quiet=False, use_cookies=True)
 
-# Debug ukuran dan isi file
-file_size = os.path.getsize(MODEL_PATH)
-print("📏 Downloaded model size:", file_size, "bytes")
+# Debug ukuran file
+if os.path.exists(MODEL_PATH):
+    size = os.path.getsize(MODEL_PATH)
+    print("📏 Model size:", size, "bytes")
+    if size < 100000:
+        with open(MODEL_PATH, "r", errors="ignore") as f:
+            print("🔍 File content (truncated):\n", f.read(500))
+        raise Exception("❌ Model file too small or corrupt. Possibly HTML page.")
+else:
+    raise Exception("❌ Model file failed to download.")
 
-if file_size < 100000:
-    with open(MODEL_PATH, 'r', errors='ignore') as f:
-        print("📄 First few characters of the file:")
-        print(f.read(500))
-    raise Exception("❌ Model file too small or corrupt. Possibly HTML page instead of .h5")
-
+# ====================
 # Load model
+# ====================
 try:
     model = load_model(MODEL_PATH)
     print("✅ Model loaded successfully.")
@@ -39,10 +44,13 @@ except Exception as e:
     print("❌ Failed to load model:", str(e))
     raise
 
+# Konfigurasi input
 target_size = (150, 150)
 class_labels = ['autumn', 'spring', 'summer', 'winter']
 
+# ====================
 # Endpoint prediksi
+# ====================
 @app.route('/predict', methods=['POST'])
 def predict():
     if 'image' not in request.files:
@@ -71,7 +79,9 @@ def predict():
         'confidence': round(confidence, 4)
     })
 
-# Jalankan app
+# ====================
+# Run server
+# ====================
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port)
