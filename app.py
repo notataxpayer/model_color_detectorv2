@@ -42,4 +42,7 @@ def predict():
     return jsonify({'prediction': predicted_label})
 
 if __name__ == '__main__':
+    import os
+    port = int(os.environ.get("PORT", 5000))  # fallback ke 5000 jika tidak ada env
+    app.run(host='0.0.0.0', port=port)
     app.run(debug=True)
