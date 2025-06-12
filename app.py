@@ -2,7 +2,6 @@ from flask import Flask, request, jsonify
 from werkzeug.utils import secure_filename
 import os
 import numpy as np
-import zipfile
 import gdown
 from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing.image import load_img, img_to_array
@@ -13,27 +12,33 @@ UPLOAD_FOLDER = 'static/uploads'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-# Konfigurasi model
-MODEL_URL = "https://drive.google.com/uc?id=1J0jRFjJNRAlMKgxw642irZ6FNxPEslqT"
-MODEL_ZIP = "best_model.zip"
+# URL/ID Google Drive model
+MODEL_ID = "1J0jRFjJNRAlMKgxw642irZ6FNxPEslqT"
 MODEL_PATH = "best_model.h5"
 
-# Unduh & ekstrak model jika belum tersedia
+# Unduh model jika belum ada
 if not os.path.exists(MODEL_PATH):
-    print("🔽 Downloading model ZIP from Google Drive...")
-    gdown.download(MODEL_URL, MODEL_ZIP, quiet=False, use_cookies=True)
-    if not os.path.exists(MODEL_ZIP):
-        raise Exception("❌ Failed to download model ZIP.")
-    print("📦 Extracting model...")
-    with zipfile.ZipFile(MODEL_ZIP, 'r') as zip_ref:
-        zip_ref.extractall()
+    print("🔽 Downloading model from Google Drive using gdown...")
+    gdown.download(id=MODEL_ID, output=MODEL_PATH, quiet=False, use_cookies=False)
 
-# Validasi ukuran model
-if not os.path.exists(MODEL_PATH) or os.path.getsize(MODEL_PATH) < 100000:
-    raise Exception("❌ Extracted model file too small or corrupt.")
+# Debug ukuran dan isi file
+file_size = os.path.getsize(MODEL_PATH)
+print("📏 Downloaded model size:", file_size, "bytes")
+
+if file_size < 100000:
+    with open(MODEL_PATH, 'r', errors='ignore') as f:
+        print("📄 First few characters of the file:")
+        print(f.read(500))
+    raise Exception("❌ Model file too small or corrupt. Possibly HTML page instead of .h5")
 
 # Load model
-model = load_model(MODEL_PATH)
+try:
+    model = load_model(MODEL_PATH)
+    print("✅ Model loaded successfully.")
+except Exception as e:
+    print("❌ Failed to load model:", str(e))
+    raise
+
 target_size = (150, 150)
 class_labels = ['autumn', 'spring', 'summer', 'winter']
 
