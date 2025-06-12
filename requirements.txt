@@ -8,4 +8,5 @@ tensorflow>=2.8.0
 opencv-python-headless>=4.5.5
 gdown
 requests>=2.25.0
+wget
 
