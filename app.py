@@ -12,17 +12,16 @@ UPLOAD_FOLDER = 'static/uploads'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-# URL model dari Google Drive
-MODEL_ID = "1eljfpXq_3qJl0xS8KknLqLbPNai7HoLT"
-MODEL_PATH = "best_model.h5"
-MODEL_URL = f"https://drive.google.com/uc?id={MODEL_ID}"
 
-# Download model jika belum ada
+MODEL_ID = "1eljfpXq_3qJl0xS8KknLqLbPNai7HoLT"
+MODEL_URL = f"https://drive.google.com/uc?id={MODEL_ID}"
+MODEL_PATH = "best_model.h5"
+
 if not os.path.exists(MODEL_PATH):
     print("🔽 Downloading model from Google Drive using gdown...")
-    gdown.download(MODEL_URL, MODEL_PATH, quiet=False)
+    gdown.download(MODEL_URL, MODEL_PATH, quiet=False, use_cookies=True)
 
-# Validasi ukuran file model
+# Validasi ukuran
 if os.path.getsize(MODEL_PATH) < 100000:
     raise Exception("Downloaded model file too small or corrupt.")
 
