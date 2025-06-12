@@ -15,8 +15,8 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 # ============================
 # Konfigurasi model dari GDrive
 # ============================
-MODEL_PATH = "best_model.h5"
-MODEL_URL = "https://drive.google.com/uc?export=download&id=1J0jRFjJNRAlMKgxw642irZ6FNxPEslqT"
+MODEL_PATH = "best_model_newest.h5"
+MODEL_URL = "https://drive.google.com/uc?export=download&id=1Ikce9LHNpi1WjthcA3xcHDchhdlcKYcO"
 
 # Download model jika belum ada
 if not os.path.exists(MODEL_PATH):
