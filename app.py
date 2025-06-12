@@ -12,7 +12,7 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 # === Info Model ===
-MODEL_URL = "https://github.com/notataxpayer/model_color_detectorv2/releases/download/v1/best_model_newest.h5"
+MODEL_URL = "https://github.com/notataxpayer/model_color_detectorv2/releases/latest/download/best_model_newest.h5"
 MODEL_PATH = "best_model_newest.h5"
 TARGET_SIZE = (150, 150)
 CLASS_LABELS = ['autumn', 'spring', 'summer', 'winter']
