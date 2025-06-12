@@ -2,7 +2,7 @@ from flask import Flask, request, jsonify
 from werkzeug.utils import secure_filename
 import os
 import numpy as np
-import gdown
+import zipfile
 from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing.image import load_img, img_to_array
 
@@ -12,18 +12,22 @@ UPLOAD_FOLDER = 'static/uploads'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-
-MODEL_ID = "1eljfpXq_3qJl0xS8KknLqLbPNai7HoLT"
-MODEL_URL = f"https://drive.google.com/uc?id={MODEL_ID}"
+# Path model
+MODEL_ZIP = "best_model.zip"
 MODEL_PATH = "best_model.h5"
 
+# Extract model jika belum tersedia
 if not os.path.exists(MODEL_PATH):
-    print("🔽 Downloading model from Google Drive using gdown...")
-    gdown.download(MODEL_URL, MODEL_PATH, quiet=False, use_cookies=True)
+    print("📦 Extracting model from ZIP...")
+    if not os.path.exists(MODEL_ZIP):
+        raise FileNotFoundError("Zip file for model not found.")
+    with zipfile.ZipFile(MODEL_ZIP, 'r') as zip_ref:
+        zip_ref.extractall()
+    print("✅ Model extracted.")
 
-# Validasi ukuran
+# Validasi ukuran file model
 if os.path.getsize(MODEL_PATH) < 100000:
-    raise Exception("Downloaded model file too small or corrupt.")
+    raise Exception("Extracted model file too small or corrupt.")
 
 # Load model
 model = load_model(MODEL_PATH)
